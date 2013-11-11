@@ -59,26 +59,8 @@ class VKontakteStrategy extends OpauthStrategy{
 				$this->errorCallback($error);
 			}
 			$results=json_decode($response,true);	
-			$vkuser_ = $this->getuser($results['access_token'],$results['user_id']); 
-			$vkuser = $vkuser_['response']['0'];
-				$this->auth = array(
-					'provider' => 'VKontakte',
-					'uid' => $vkuser['uid'],
-					'info' => array(
-					),
-					'credentials' => array(
-						'token' => $results['access_token'],
-						'expires' => date('c', time() + $results['expires_in'])
-					),
-					'raw' => $vkuser
-				);
-			
-				if (!empty($vkuser['first_name'])) $this->auth['info']['name'] = $vkuser['first_name'];
-				if (!empty($vkuser['screen_name'])) $this->auth['info']['nickname'] = $vkuser['screen_name'];
-				if (!empty($vkuser['sex']) and ($vkuser['sex']!='0')) $this->auth['info']['gender']=($vkuser['sex']=='1')?'female':'male';
-				if (!empty($vkuser['photo_big'])) $this->auth['info']['image'] = $vkuser['photo_big'];
 
-         $this->callback();
+            $this->processToken($results['access_token'], $results['user_id'], $results['expires_in']);
 
 				 // If the data doesn't seem to be written to the session, it is probably because your sessions are
 				// stored in the database and your session table is not encoded in UTF8. 
@@ -105,6 +87,38 @@ class VKontakteStrategy extends OpauthStrategy{
 			$this->errorCallback($error);
 		}
 	}
+
+    public function processToken($accessToken, $userId, $tokenExpires = 0)
+    {
+        $userResponse = $this->getuser($accessToken, $userId);
+
+        $vkUser     = $userResponse['response']['0'];
+        $this->auth = array(
+            'provider'    => 'VKontakte',
+            'uid'         => $vkUser['uid'],
+            'info'        => array(),
+            'credentials' => array(
+                'token'   => $accessToken,
+                'expires' => date('c', time() + $tokenExpires)
+            ),
+            'raw'         => $vkUser
+        );
+
+        if (!empty($vkUser['first_name'])) {
+            $this->auth['info']['name'] = $vkUser['first_name'];
+        }
+        if (!empty($vkUser['screen_name'])) {
+            $this->auth['info']['nickname'] = $vkUser['screen_name'];
+        }
+        if (!empty($vkUser['sex']) and ($vkUser['sex'] != '0')) {
+            $this->auth['info']['gender'] = ($vkUser['sex'] == '1') ? 'female' : 'male';
+        }
+        if (!empty($vkUser['photo_big'])) {
+            $this->auth['info']['image'] = $vkUser['photo_big'];
+        }
+
+        $this->callback();
+    }
 	
 	private function getuser($access_token,$uid){
 			$fields='uid, first_name, last_name, nickname, screen_name, sex, bdate, photo, photo_medium, photo_big, rate, contacts';
