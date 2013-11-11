@@ -127,7 +127,7 @@ class VKontakteStrategy extends OpauthStrategy{
             'https://api.vk.com/method/users.get',
             array('access_token' => $access_token, 'uid' => $uid, 'fields' => $fields),
             array(),
-            $headers = array()
+            $headers
         );
         if (!empty($vkUser)) {
             return json_decode($vkUser, true);
