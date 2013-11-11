@@ -5,12 +5,12 @@
  */
 
 class VKontakteStrategy extends OpauthStrategy{
-	
+
 	/**
 	 * Compulsory config keys, listed as unassociative arrays
 	 */
 	public $expects = array('app_id', 'app_secret');
-	
+
 	/**
 	 * Optional config keys with respective default values, listed as associative arrays
 	 */
@@ -33,7 +33,7 @@ class VKontakteStrategy extends OpauthStrategy{
 
 		$this->clientGet($url, $params);
 	}
-	
+
 	/**
 	 * Internal callback to get the code and request que authorization token, after VKontakte's OAuth
 	 */
@@ -43,7 +43,7 @@ class VKontakteStrategy extends OpauthStrategy{
 			$params = array(
 				'client_id' =>$this->strategy['app_id'],
 				'client_secret' => $this->strategy['app_secret'],
-				'code' => $_GET['code'],       
+				'code' => $_GET['code'],
 				'redirect_uri'=> $this->strategy['redirect_uri'],
 			);
 			$response = $this->serverGet($url,$params,false,$headers);
@@ -58,12 +58,12 @@ class VKontakteStrategy extends OpauthStrategy{
 
 				$this->errorCallback($error);
 			}
-			$results=json_decode($response,true);	
+			$results=json_decode($response,true);
 
             $this->processToken($results['access_token'], $results['user_id'], $results['expires_in']);
 
 				 // If the data doesn't seem to be written to the session, it is probably because your sessions are
-				// stored in the database and your session table is not encoded in UTF8. 
+				// stored in the database and your session table is not encoded in UTF8.
 				// The following lines will jump over the security but will allow you to use
 				 // the plugin without utf8 support in the database.
 
@@ -83,14 +83,14 @@ class VKontakteStrategy extends OpauthStrategy{
 				'message' => isset($_GET['error_description'])?$_GET['error_description']:'',
 				'raw' => $_GET
 			);
-			
+
 			$this->errorCallback($error);
 		}
 	}
 
     public function processToken($accessToken, $userId, $tokenExpires = 0)
     {
-        $userResponse = $this->getuser($accessToken, $userId);
+        $userResponse = $this->getUser($accessToken, $userId);
 
         $vkUser     = $userResponse['response']['0'];
         $this->auth = array(
@@ -119,24 +119,28 @@ class VKontakteStrategy extends OpauthStrategy{
 
         $this->callback();
     }
-	
-	private function getuser($access_token,$uid){
-			$fields='uid, first_name, last_name, nickname, screen_name, sex, bdate, photo, photo_medium, photo_big, rate, contacts';
-			$vkuser = $this->serverget('https://api.vk.com/method/users.get', array('access_token' => $access_token,'uid'=>$uid,'fields'=>$fields));
-			if (!empty($vkuser))
-			{
-				return json_decode($vkuser,true);
-			}
-			else{
-			$error = array(
-				'code' => 'Get User error',
-				'message' => 'Failed when attempting to query for user information',
-				'raw' => array(
-					'access_token' => $access_token,	
-					'headers' => $headers
-				)
-			);
-			$this->errorCallback($error);
-		}
-	} 
+
+    private function getUser($access_token, $uid)
+    {
+        $fields = 'uid, first_name, last_name, nickname, screen_name, sex, bdate, photo, photo_medium, photo_big, rate, contacts';
+        $vkUser = $this->serverget(
+            'https://api.vk.com/method/users.get',
+            array('access_token' => $access_token, 'uid' => $uid, 'fields' => $fields),
+            array(),
+            $headers = array()
+        );
+        if (!empty($vkUser)) {
+            return json_decode($vkUser, true);
+        } else {
+            $error = array(
+                'code'    => 'Get User error',
+                'message' => 'Failed when attempting to query for user information',
+                'raw'     => array(
+                    'access_token' => $access_token,
+                    'headers'      => $headers
+                )
+            );
+            $this->errorCallback($error);
+        }
+    }
 }
