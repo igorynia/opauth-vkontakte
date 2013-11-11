@@ -55,7 +55,7 @@ class VKontakteStrategy extends OpauthStrategy{
 						'headers' => $headers
 					)
 				);
-				exit();
+
 				$this->errorCallback($error);
 			}
 			$results=json_decode($response,true);	
